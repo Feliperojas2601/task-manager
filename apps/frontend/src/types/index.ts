@@ -34,3 +34,31 @@ export interface CreateProjectInput {
     name: string;
     description?: string;
 }
+
+export interface CreateTaskInput {
+    title: string;
+    description?: string;
+    status?: TaskStatus;
+    priority?: Priority;
+}
+
+export interface UpdateTaskInput {
+    title?: string;
+    description?: string | null;
+    status?: TaskStatus;
+    priority?: Priority;
+}
+
+export interface TaskFilter {
+    status?: TaskStatus;
+    priority?: Priority;
+    sortBy?: 'createdAt' | 'priority';
+    order?: 'asc' | 'desc';
+}
+
+export interface TaskFormData {
+    title: string;
+    description: string;
+    status: TaskStatus;
+    priority: Priority;
+}

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CSSProperties } from 'react';
 import { projectsApi } from '../api/projects';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import type { ProjectSummary } from '../types';
@@ -31,41 +30,63 @@ export function ProjectsPage() {
         await fetchProjects();
     };
 
-    if (loading) return <div style={s.center}>Loading…</div>;
-    if (error) return <div style={s.center}>{error}</div>;
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-[60vh] text-gray-400">
+                Loading…
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-[60vh] text-gray-500">
+                {error}
+            </div>
+        );
+    }
 
     return (
-        <div style={s.page}>
-            <div style={s.header}>
-                <h1 style={s.title}>Projects</h1>
-                <button style={s.createBtn} onClick={() => setShowModal(true)}>
+        <div className="max-w-4xl mx-auto px-6 py-8">
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+                <button
+                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    onClick={() => setShowModal(true)}
+                >
                     + New Project
                 </button>
             </div>
 
             {projects.length === 0 ? (
-                <div style={s.emptyState}>
-                    <p style={s.emptyText}>No projects yet.</p>
-                    <p style={s.emptyHint}>Create your first project to get started.</p>
+                <div className="text-center py-20">
+                    <p className="text-xl text-gray-700 mb-2">No projects yet.</p>
+                    <p className="text-sm text-gray-400">Create your first project to get started.</p>
                 </div>
             ) : (
-                <div style={s.grid}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
                     {projects.map(project => (
                         <div
                             key={project.id}
-                            style={s.card}
+                            className="border border-gray-200 rounded-xl p-5 cursor-pointer bg-white hover:shadow-md transition-shadow outline-none"
                             onClick={() => navigate(`/projects/${project.id}`)}
                             role="button"
                             tabIndex={0}
                             onKeyDown={e => e.key === 'Enter' && navigate(`/projects/${project.id}`)}
                         >
-                            <h2 style={s.cardTitle}>{project.name}</h2>
+                            <h2 className="text-base font-semibold text-gray-900 mb-2">
+                                {project.name}
+                            </h2>
                             {project.description && (
-                                <p style={s.cardDesc}>{project.description}</p>
+                                <p className="text-sm text-gray-500 mb-3 truncate">
+                                    {project.description}
+                                </p>
                             )}
-                            <div style={s.cardMeta}>
-                                <span style={s.taskCount}>{project.taskCount} tasks</span>
-                                <span style={s.date}>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-blue-600 font-medium">
+                                    {project.taskCount} tasks
+                                </span>
+                                <span className="text-xs text-gray-400">
                                     {new Date(project.createdAt).toLocaleDateString()}
                                 </span>
                             </div>
@@ -83,33 +104,3 @@ export function ProjectsPage() {
         </div>
     );
 }
-
-const s: Record<string, CSSProperties> = {
-    page: { maxWidth: 960, margin: '0 auto', padding: '32px 24px' },
-    header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 },
-    title: { margin: 0, fontSize: 28, fontWeight: 700, color: '#111' },
-    createBtn: {
-        padding: '10px 20px', border: 'none', borderRadius: 6, background: '#2563eb',
-        color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 500, fontFamily: 'inherit',
-    },
-    center: {
-        display: 'flex', justifyContent: 'center', alignItems: 'center',
-        height: '60vh', fontSize: 16, color: '#6b7280',
-    },
-    emptyState: { textAlign: 'center', padding: '80px 0' },
-    emptyText: { fontSize: 20, color: '#374151', margin: '0 0 8px' },
-    emptyHint: { fontSize: 14, color: '#9ca3af', margin: 0 },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 },
-    card: {
-        border: '1px solid #e5e7eb', borderRadius: 8, padding: 20,
-        cursor: 'pointer', background: '#fff', outline: 'none',
-    },
-    cardTitle: { margin: '0 0 8px', fontSize: 16, fontWeight: 600, color: '#111' },
-    cardDesc: {
-        margin: '0 0 12px', fontSize: 14, color: '#6b7280',
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-    },
-    cardMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    taskCount: { fontSize: 12, color: '#2563eb', fontWeight: 500 },
-    date: { fontSize: 12, color: '#9ca3af' },
-};
