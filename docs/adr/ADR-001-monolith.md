@@ -1,4 +1,4 @@
-# ADR-001 — Architecture style: Monolith
+# ADR-001 — Architecture style: Monolith - 3 Tier
 
 **Status:** Accepted
 

@@ -6,7 +6,7 @@ A full-stack project task management application that allows users to create pro
 
 ## Architecture style
 
-The overall style is a **monolith** — a single backend service and a single frontend application. The backend is internally structured following **Clean Architecture**, with strict inward dependency flow across three layers: `domain`, `application`, and `infrastructure`.
+The overall style is a **monolith** (3-tier architecture) — a single backend service and a single frontend application. The backend is internally structured following **Clean Architecture**, with strict inward dependency flow across three layers: `domain`, `application`, and `infrastructure`.
 
 ```mermaid
 graph TD
@@ -28,6 +28,8 @@ graph TD
   CTRL --> DB
 ```
 
+Dependency rule: arrows always point inward — `Infrastructure → Application → Domain`. No layer imports from an outer one.
+
 ## Components
 
 | Component | Layer | Responsibility |
@@ -39,6 +41,35 @@ graph TD
 | Use Cases | Application | Orchestrates domain logic; defines application interfaces |
 | Domain Entities | Domain | Core business rules: task states, priorities, project invariants |
 | PostgreSQL | Database | Persistent relational storage |
+
+## Data model
+
+```mermaid
+erDiagram
+    Project {
+        uuid id PK
+        string name
+        string description
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Task {
+        uuid id PK
+        string title
+        string description
+        TaskStatus status
+        Priority priority
+        datetime createdAt
+        datetime updatedAt
+        uuid projectId FK
+    }
+
+    Project ||--o{ Task : "has"
+```
+
+`TaskStatus`: `PENDING | IN_PROGRESS | DONE`  
+`Priority`: `LOW | MEDIUM | HIGH`
 
 ## Key decisions
 
