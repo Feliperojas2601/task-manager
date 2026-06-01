@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import { ResponseHandler } from '../http/response-handler';
 
 export class HealthController {
     health(_req: Request, res: Response): void {
-        res.status(200).json({ message: 'ok' });
+        ResponseHandler.ok(res, { message: 'ok' });
     }
 }

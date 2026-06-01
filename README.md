@@ -65,6 +65,6 @@ npm test              # run tests
 npm run test:coverage # run with coverage report
 ```
 
-## Process documentation 
+## Development process
 
 See `docs/README.md`

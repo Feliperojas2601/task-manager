@@ -38,8 +38,12 @@ docs/
 - **File location:** co-located with source — `foo.controller.test.ts` next to `foo.controller.ts`
 - **Naming:** `describe('unit under test')` + `it('does X when Y')`
 - **Coverage:** 100% line coverage required on all backend source files (except `server.ts`)
-- **Mocking:** mock only at infrastructure boundaries (repositories); never mock domain or use-case logic
-- **No real DB in unit tests** — repository interfaces are injected and mocked in use-case tests
+- **Mocking strategy by layer:**
+  - Use-case tests: inject a mock `IRepository` directly via constructor — no jest.mock needed
+  - Controller tests: `jest.mock` the use-case and repository modules; set `MockUseCase.prototype.method` before calling `buildApp()`; include `globalErrorHandler` in the test app to assert error response shapes
+  - Repository tests: `jest.mock('../database/prisma', () => ({ prisma: { model: { method: jest.fn() } } }))`
+  - Validator tests: no mocking needed — pure functions
+- **No real DB in unit tests**
 
 ## 5. Architecture & Patterns
 
@@ -48,11 +52,19 @@ Backend follows **Clean Architecture** with three layers:
 | Layer | Directory | Rule |
 |-------|-----------|------|
 | Domain | `src/domain/` | No dependencies on other layers or frameworks |
-| Application | `src/application/` | Depends only on domain; defines repository interfaces |
+| Application | `src/application/` | Depends only on domain; defines repository interfaces and validators |
 | Infrastructure | `src/infrastructure/` | Depends on application; implements Express, Prisma |
 
-- Dependency injection: use-cases receive repository interfaces via constructor
-- Controllers are thin: validate input → call use case → serialise response
+**Composition root:** Controllers are the composition root for their feature slice. The controller constructor instantiates the validator, repository, and use case. The route file only calls `new Controller()`. Use cases receive the repository interface via constructor (DI preserved at that level).
+
+**Routes:** one file per resource in `src/infrastructure/routes/` (e.g., `project.route.ts`). Each file creates the controller and registers its routes. `router.ts` only imports and mounts route files.
+
+**Error handling:** All domain errors extend `HttpError(statusCode, message)` from `src/domain/errors/http.error.ts`. Controllers call `next(error)` — never build the response themselves on error. `globalErrorHandler` middleware (registered last in `app.ts`) reads `err.statusCode` and responds: `{ status: number, message: string }`. Unexpected errors respond with `{ status: 500, message: "Internal server error" }`.
+
+**Validation:** Each resource has a `XxxValidator` class in `src/application/validators/`. The controller calls `this.validator.validateXxx(req.body)` before the use case. The validator trims/coerces input and throws `ValidationError` on failure. Use cases may call the same validator for complex business-rule validation.
+
+**Responses:** Controllers never call `res.status().json()` directly. Use `ResponseHandler.ok(res, data)` or `ResponseHandler.created(res, data)` from `src/infrastructure/http/response-handler.ts`.
+
 - No business logic in controllers or repositories
 
 ## 6. Security Practices

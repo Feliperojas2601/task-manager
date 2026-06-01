@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { HealthController } from './controllers/health.controller';
+import { healthRouter } from './routes/health.route';
+import { projectRouter } from './routes/project.route';
 
 const router = Router();
-const healthControllerInstance = new HealthController();
 
-router.get('/health', (req, res) => healthControllerInstance.health(req, res));
+router.use(healthRouter);
+router.use(projectRouter);
 
 export { router };
