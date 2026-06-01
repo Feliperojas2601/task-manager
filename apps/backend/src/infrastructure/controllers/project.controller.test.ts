@@ -4,19 +4,25 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../../application/use-cases/create-project.use-case');
 jest.mock('../../application/use-cases/list-projects.use-case');
+jest.mock('../../application/use-cases/get-project-detail.use-case');
 jest.mock('../repositories/prisma-project.repository');
 
 import { ProjectController } from './project.controller';
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
 import { ListProjectsUseCase } from '../../application/use-cases/list-projects.use-case';
+import { GetProjectDetailUseCase } from '../../application/use-cases/get-project-detail.use-case';
 import { globalErrorHandler } from '../middleware/error-handler';
-import { Project, ProjectSummary } from '../../domain/entities/project.entity';
+import { Project, ProjectSummary, ProjectDetail } from '../../domain/entities/project.entity';
+import { NotFoundError } from '../../domain/errors/not-found.error';
 
 const MockCreateUseCase = jest.mocked(CreateProjectUseCase);
 const MockListUseCase = jest.mocked(ListProjectsUseCase);
+const MockGetDetailUseCase = jest.mocked(GetProjectDetailUseCase);
+
+const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
 const makeProject = (): Project => ({
-    id: 'abc-123',
+    id: VALID_UUID,
     name: 'Test Project',
     description: null,
     createdAt: new Date('2026-01-01'),
@@ -24,12 +30,22 @@ const makeProject = (): Project => ({
 });
 
 const makeSummary = (overrides?: Partial<ProjectSummary>): ProjectSummary => ({
-    id: 'abc-123',
+    id: VALID_UUID,
     name: 'Test Project',
     description: null,
     taskCount: 0,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
+    ...overrides,
+});
+
+const makeDetail = (overrides?: Partial<ProjectDetail>): ProjectDetail => ({
+    id: VALID_UUID,
+    name: 'Test Project',
+    description: null,
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+    tasks: [],
     ...overrides,
 });
 
@@ -39,6 +55,7 @@ const buildApp = () => {
     app.use(express.json());
     app.post('/projects', (req, res, next) => controller.create(req, res, next));
     app.get('/projects', (req, res, next) => controller.list(req, res, next));
+    app.get('/projects/:id', (req, res, next) => controller.getById(req, res, next));
     app.use(globalErrorHandler);
     return app;
 };
@@ -56,7 +73,7 @@ describe('POST /projects', () => {
         const response = await request(app).post('/projects').send({ name: 'Test Project' });
 
         expect(response.status).toBe(201);
-        expect(response.body.id).toBe('abc-123');
+        expect(response.body.id).toBe(VALID_UUID);
         expect(response.body.name).toBe('Test Project');
     });
 
@@ -121,6 +138,55 @@ describe('GET /projects', () => {
         const app = buildApp();
 
         const response = await request(app).get('/projects');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
+    });
+});
+
+describe('GET /projects/:id', () => {
+    beforeEach(() => {
+        MockGetDetailUseCase.mockClear();
+    });
+
+    it('returns 200 with project detail when found', async () => {
+        const detail = makeDetail({ tasks: [] });
+        MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockResolvedValue(detail);
+        const app = buildApp();
+
+        const response = await request(app).get(`/projects/${VALID_UUID}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.id).toBe(VALID_UUID);
+        expect(response.body.tasks).toEqual([]);
+    });
+
+    it('returns 400 when id is not a valid UUID', async () => {
+        const app = buildApp();
+
+        const response = await request(app).get('/projects/not-a-uuid');
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
+    });
+
+    it('returns 404 when project is not found', async () => {
+        MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockRejectedValue(
+            new NotFoundError(`Project with id ${VALID_UUID} not found`),
+        );
+        const app = buildApp();
+
+        const response = await request(app).get(`/projects/${VALID_UUID}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
+    });
+
+    it('returns 500 on unexpected use-case error', async () => {
+        MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockRejectedValue(new Error('DB down'));
+        const app = buildApp();
+
+        const response = await request(app).get(`/projects/${VALID_UUID}`);
 
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });

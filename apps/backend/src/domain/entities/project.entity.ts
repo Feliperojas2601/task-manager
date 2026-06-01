@@ -1,3 +1,5 @@
+import { Task } from './task.entity';
+
 export interface Project {
     id: string;
     name: string;
@@ -8,4 +10,8 @@ export interface Project {
 
 export interface ProjectSummary extends Project {
     taskCount: number;
+}
+
+export interface ProjectDetail extends Project {
+    tasks: Task[];
 }

@@ -16,6 +16,7 @@ const makeSummary = (overrides?: Partial<ProjectSummary>): ProjectSummary => ({
 const makeRepository = (projects: ProjectSummary[] = []): IProjectRepository => ({
     create: jest.fn<() => Promise<never>>(),
     findAll: jest.fn<() => Promise<ProjectSummary[]>>().mockResolvedValue(projects),
+    findById: jest.fn<() => Promise<null>>().mockResolvedValue(null),
 });
 
 describe('ListProjectsUseCase', () => {

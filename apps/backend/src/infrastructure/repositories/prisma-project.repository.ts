@@ -1,5 +1,5 @@
 import { prisma } from '../database/prisma';
-import { Project, ProjectSummary } from '../../domain/entities/project.entity';
+import { Project, ProjectSummary, ProjectDetail } from '../../domain/entities/project.entity';
 import { IProjectRepository } from '../../application/repositories/project.repository';
 
 export class PrismaProjectRepository implements IProjectRepository {
@@ -25,5 +25,30 @@ export class PrismaProjectRepository implements IProjectRepository {
             createdAt: p.createdAt,
             updatedAt: p.updatedAt,
         }));
+    }
+
+    async findById(id: string): Promise<ProjectDetail | null> {
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { tasks: true },
+        });
+        if (!project) return null;
+        return {
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+            tasks: project.tasks.map(t => ({
+                id: t.id,
+                title: t.title,
+                description: t.description,
+                status: t.status,
+                priority: t.priority,
+                projectId: t.projectId,
+                createdAt: t.createdAt,
+                updatedAt: t.updatedAt,
+            })),
+        };
     }
 }

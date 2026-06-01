@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../database/prisma', () => ({
-    prisma: { project: { create: jest.fn(), findMany: jest.fn() } },
+    prisma: { project: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() } },
 }));
 
 import { PrismaProjectRepository } from './prisma-project.repository';
@@ -9,11 +9,13 @@ import { prisma } from '../database/prisma';
 
 const mockCreate = prisma.project.create as jest.MockedFunction<typeof prisma.project.create>;
 const mockFindMany = prisma.project.findMany as jest.MockedFunction<typeof prisma.project.findMany>;
+const mockFindUnique = prisma.project.findUnique as jest.MockedFunction<typeof prisma.project.findUnique>;
 
 describe('PrismaProjectRepository', () => {
     beforeEach(() => {
         mockCreate.mockReset();
         mockFindMany.mockReset();
+        mockFindUnique.mockReset();
     });
 
     it('calls prisma.project.create and returns the result', async () => {
@@ -67,5 +69,65 @@ describe('PrismaProjectRepository', () => {
         const result = await repository.findAll();
 
         expect(result).toEqual([]);
+    });
+
+    it('findById returns mapped ProjectDetail with tasks when found', async () => {
+        const now = new Date();
+        const raw = {
+            id: 'proj-1',
+            name: 'My Project',
+            description: null,
+            createdAt: now,
+            updatedAt: now,
+            tasks: [
+                {
+                    id: 'task-1',
+                    title: 'Task A',
+                    description: null,
+                    status: 'PENDING',
+                    priority: 'MEDIUM',
+                    projectId: 'proj-1',
+                    createdAt: now,
+                    updatedAt: now,
+                },
+            ],
+        };
+        mockFindUnique.mockResolvedValue(raw as never);
+        const repository = new PrismaProjectRepository();
+
+        const result = await repository.findById('proj-1');
+
+        expect(mockFindUnique).toHaveBeenCalledWith({
+            where: { id: 'proj-1' },
+            include: { tasks: true },
+        });
+        expect(result).toEqual({
+            id: 'proj-1',
+            name: 'My Project',
+            description: null,
+            createdAt: now,
+            updatedAt: now,
+            tasks: [
+                {
+                    id: 'task-1',
+                    title: 'Task A',
+                    description: null,
+                    status: 'PENDING',
+                    priority: 'MEDIUM',
+                    projectId: 'proj-1',
+                    createdAt: now,
+                    updatedAt: now,
+                },
+            ],
+        });
+    });
+
+    it('findById returns null when project does not exist', async () => {
+        mockFindUnique.mockResolvedValue(null as never);
+        const repository = new PrismaProjectRepository();
+
+        const result = await repository.findById('no-such-id');
+
+        expect(result).toBeNull();
     });
 });

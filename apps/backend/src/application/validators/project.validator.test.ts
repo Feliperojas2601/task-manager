@@ -36,4 +36,23 @@ describe('ProjectValidator', () => {
             expect(() => validator.validateCreate({ name: 123 })).toThrow('name is required');
         });
     });
+
+    describe('validateId', () => {
+        it('returns the id when it is a valid UUID', () => {
+            const id = '550e8400-e29b-41d4-a716-446655440000';
+            expect(validator.validateId(id)).toBe(id);
+        });
+
+        it('throws ValidationError when id is not a UUID', () => {
+            expect(() => validator.validateId('not-a-uuid')).toThrow('id must be a valid UUID');
+        });
+
+        it('throws ValidationError when id is an empty string', () => {
+            expect(() => validator.validateId('')).toThrow('id must be a valid UUID');
+        });
+
+        it('throws ValidationError when id is a plain number string', () => {
+            expect(() => validator.validateId('12345')).toThrow('id must be a valid UUID');
+        });
+    });
 });
