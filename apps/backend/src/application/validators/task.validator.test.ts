@@ -140,4 +140,55 @@ describe('TaskValidator', () => {
             expect(result).toEqual({ title: 'T', status: 'IN_PROGRESS', priority: 'LOW' });
         });
     });
+
+    describe('validateListQuery', () => {
+        it('returns empty filters when query is empty', () => {
+            expect(validator.validateListQuery({})).toEqual({});
+        });
+
+        it('returns status filter when valid', () => {
+            expect(validator.validateListQuery({ status: 'IN_PROGRESS' })).toEqual({ status: 'IN_PROGRESS' });
+        });
+
+        it('throws ValidationError when status is invalid', () => {
+            expect(() => validator.validateListQuery({ status: 'INVALID' })).toThrow('status must be one of PENDING, IN_PROGRESS, DONE');
+        });
+
+        it('returns priority filter when valid', () => {
+            expect(validator.validateListQuery({ priority: 'HIGH' })).toEqual({ priority: 'HIGH' });
+        });
+
+        it('throws ValidationError when priority is invalid', () => {
+            expect(() => validator.validateListQuery({ priority: 'URGENT' })).toThrow('priority must be one of LOW, MEDIUM, HIGH');
+        });
+
+        it('returns sortBy createdAt when valid', () => {
+            expect(validator.validateListQuery({ sortBy: 'createdAt' })).toEqual({ sortBy: 'createdAt' });
+        });
+
+        it('returns sortBy priority when valid', () => {
+            expect(validator.validateListQuery({ sortBy: 'priority' })).toEqual({ sortBy: 'priority' });
+        });
+
+        it('throws ValidationError when sortBy is invalid', () => {
+            expect(() => validator.validateListQuery({ sortBy: 'name' })).toThrow('sortBy must be one of createdAt, priority');
+        });
+
+        it('returns order asc when valid', () => {
+            expect(validator.validateListQuery({ order: 'asc' })).toEqual({ order: 'asc' });
+        });
+
+        it('returns order desc when valid', () => {
+            expect(validator.validateListQuery({ order: 'desc' })).toEqual({ order: 'desc' });
+        });
+
+        it('throws ValidationError when order is invalid', () => {
+            expect(() => validator.validateListQuery({ order: 'sideways' })).toThrow('order must be one of asc, desc');
+        });
+
+        it('returns all filters combined', () => {
+            const result = validator.validateListQuery({ status: 'DONE', priority: 'LOW', sortBy: 'priority', order: 'asc' });
+            expect(result).toEqual({ status: 'DONE', priority: 'LOW', sortBy: 'priority', order: 'asc' });
+        });
+    });
 });

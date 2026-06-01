@@ -1,5 +1,6 @@
 import { Task } from '../../domain/entities/task.entity';
 import { TaskStatus, Priority } from '../../domain/entities/enums';
+import { TaskFilter } from '../../domain/value-objects/task-filter';
 
 export interface ITaskRepository {
     create(data: {
@@ -17,4 +18,5 @@ export interface ITaskRepository {
         priority?: Priority;
     }): Promise<Task>;
     delete(id: string): Promise<void>;
+    findByProject(projectId: string, filters: TaskFilter): Promise<Task[]>;
 }

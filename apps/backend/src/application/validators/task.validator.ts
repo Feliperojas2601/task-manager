@@ -1,4 +1,5 @@
 import { TaskStatus, Priority } from '../../domain/entities/enums';
+import { TaskFilter } from '../../domain/value-objects/task-filter';
 import { ValidationError } from '../../domain/errors/validation.error';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -16,6 +17,11 @@ export interface UpdateTaskInput {
     description?: string | null;
     status?: TaskStatus;
     priority?: Priority;
+}
+
+export interface ListTasksInput {
+    projectId: string;
+    filters: TaskFilter;
 }
 
 export class TaskValidator {
@@ -70,6 +76,42 @@ export class TaskValidator {
         }
 
         return result;
+    }
+
+    validateListQuery(query: Record<string, unknown>): TaskFilter {
+        const filters: TaskFilter = {};
+
+        if (query.status !== undefined) {
+            const valid = Object.values(TaskStatus);
+            if (!valid.includes(query.status as TaskStatus)) {
+                throw new ValidationError(`status must be one of ${valid.join(', ')}`);
+            }
+            filters.status = query.status as TaskStatus;
+        }
+
+        if (query.priority !== undefined) {
+            const valid = Object.values(Priority);
+            if (!valid.includes(query.priority as Priority)) {
+                throw new ValidationError(`priority must be one of ${valid.join(', ')}`);
+            }
+            filters.priority = query.priority as Priority;
+        }
+
+        if (query.sortBy !== undefined) {
+            if (query.sortBy !== 'createdAt' && query.sortBy !== 'priority') {
+                throw new ValidationError('sortBy must be one of createdAt, priority');
+            }
+            filters.sortBy = query.sortBy as 'createdAt' | 'priority';
+        }
+
+        if (query.order !== undefined) {
+            if (query.order !== 'asc' && query.order !== 'desc') {
+                throw new ValidationError('order must be one of asc, desc');
+            }
+            filters.order = query.order as 'asc' | 'desc';
+        }
+
+        return filters;
     }
 
     private parseStatus(value: unknown): TaskStatus {

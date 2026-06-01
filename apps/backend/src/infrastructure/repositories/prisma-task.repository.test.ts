@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../database/prisma', () => ({
-    prisma: { task: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() } },
+    prisma: { task: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn(), findMany: jest.fn() } },
 }));
 
 import { PrismaTaskRepository } from './prisma-task.repository';
@@ -11,6 +11,7 @@ const mockCreate = prisma.task.create as jest.MockedFunction<typeof prisma.task.
 const mockFindUnique = prisma.task.findUnique as jest.MockedFunction<typeof prisma.task.findUnique>;
 const mockUpdate = prisma.task.update as jest.MockedFunction<typeof prisma.task.update>;
 const mockDelete = prisma.task.delete as jest.MockedFunction<typeof prisma.task.delete>;
+const mockFindMany = prisma.task.findMany as jest.MockedFunction<typeof prisma.task.findMany>;
 
 const makeRaw = (overrides = {}) => {
     const now = new Date();
@@ -33,6 +34,7 @@ describe('PrismaTaskRepository', () => {
         mockFindUnique.mockReset();
         mockUpdate.mockReset();
         mockDelete.mockReset();
+        mockFindMany.mockReset();
     });
 
     it('calls prisma.task.create with correct data and returns the result', async () => {
@@ -101,5 +103,43 @@ describe('PrismaTaskRepository', () => {
         await repository.delete('task-1');
 
         expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'task-1' } });
+    });
+
+    it('findByProject returns tasks with no filters, ordered by createdAt desc', async () => {
+        const tasks = [makeRaw()];
+        mockFindMany.mockResolvedValue(tasks as never);
+        const repository = new PrismaTaskRepository();
+
+        const result = await repository.findByProject('proj-1', {});
+
+        expect(mockFindMany).toHaveBeenCalledWith({
+            where: { projectId: 'proj-1' },
+            orderBy: { createdAt: 'desc' },
+        });
+        expect(result).toEqual(tasks);
+    });
+
+    it('findByProject applies status and priority filters', async () => {
+        mockFindMany.mockResolvedValue([] as never);
+        const repository = new PrismaTaskRepository();
+
+        await repository.findByProject('proj-1', { status: 'DONE', priority: 'HIGH' });
+
+        expect(mockFindMany).toHaveBeenCalledWith({
+            where: { projectId: 'proj-1', status: 'DONE', priority: 'HIGH' },
+            orderBy: { createdAt: 'desc' },
+        });
+    });
+
+    it('findByProject applies sortBy priority with asc order', async () => {
+        mockFindMany.mockResolvedValue([] as never);
+        const repository = new PrismaTaskRepository();
+
+        await repository.findByProject('proj-1', { sortBy: 'priority', order: 'asc' });
+
+        expect(mockFindMany).toHaveBeenCalledWith({
+            where: { projectId: 'proj-1' },
+            orderBy: { priority: 'asc' },
+        });
     });
 });

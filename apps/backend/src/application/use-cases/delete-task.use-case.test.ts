@@ -20,6 +20,7 @@ const makeRepository = (task: Task | null): ITaskRepository => ({
     findById: jest.fn<() => Promise<Task | null>>().mockResolvedValue(task),
     update: jest.fn<() => Promise<Task>>().mockResolvedValue(makeTask()),
     delete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    findByProject: jest.fn<() => Promise<never[]>>().mockResolvedValue([]),
 });
 
 describe('DeleteTaskUseCase', () => {
