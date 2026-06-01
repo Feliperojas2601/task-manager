@@ -36,10 +36,6 @@ For more architecture details, see `docs/architecture-overview.md`
 | DELETE | /tasks/:id | Delete a task |
 | GET | /projects/:projectId/tasks | List/filter tasks by project |
 
-## Demo
-
-TODO: Video
-
 ## Execution
 
 ### Using Docker
