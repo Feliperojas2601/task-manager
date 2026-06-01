@@ -1,6 +1,7 @@
-# ADR-006 — API style: REST
+# ADR-005 — API style: REST
 
 **Status:** Accepted
+
 **Date:** 2026-06-01
 
 ## Context
@@ -16,7 +17,6 @@ The backend exposes a RESTful HTTP API using standard HTTP verbs (GET, POST, PUT
 | Alternative | Reason discarded |
 |-------------|-----------------|
 | GraphQL | Adds schema definition overhead and a resolver layer; the frontend's data needs are simple and predictable |
-| tRPC | Tight coupling between frontend and backend TypeScript codebases; acceptable but monorepo setup adds complexity |
 | WebSockets / SSE | Not needed; no real-time requirement stated |
 
 ## Consequences
@@ -27,5 +27,5 @@ The backend exposes a RESTful HTTP API using standard HTTP verbs (GET, POST, PUT
 - Stateless; each request is self-contained
 
 **Negative / trade-offs**
-- Over-fetching or under-fetching may require multiple round-trips for complex views (acceptable at this scope)
-- No built-in type contract between client and server (mitigated by shared TypeScript types if desired)
+- Over-fetching or under-fetching are possible
+- No built-in type contract between client and server

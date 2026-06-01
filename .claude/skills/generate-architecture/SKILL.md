@@ -51,10 +51,9 @@ test -f "<path>" && echo "EXISTS" || echo "NOT_FOUND"
 
 Read the full content of the requirements file. Identify:
 
-- **Technologies explicitly required**: frameworks, databases, languages named in the document
-- **Technologies implied but not stated**: e.g., if React + Node.js are required, Docker for containerisation is a natural decision worth documenting
-- **Architectural patterns**: any structural decisions that arise from the requirements (e.g., 3-layer architecture, REST API, monorepo vs. separate repos)
-- **Cross-cutting concerns**: error handling strategy, authentication approach, environment configuration
+- **Technologies explicitly required**: frameworks, databases, languages named in the document. These are non-negotiable decisions that must be documented in one single ADR.
+- **Architectural patterns**: any structural decisions that arise from the requirements such as style or patterns (e.g., 3-tier architecture, REST API, clean architecture, microservices vs monolith, etc.)
+- **Cross-cutting concerns**: error handling strategy, authentication approach, observability, etc.
 
 Each of these becomes a candidate ADR.
 
@@ -65,12 +64,11 @@ Each of these becomes a candidate ADR.
 Present the proposed ADR list before writing any files:
 
 ```
-ADR-001 — Backend architecture: 3-layer (routes / services / repositories)
-ADR-002 — Database: PostgreSQL
-ADR-003 — Frontend framework: React 18
-ADR-004 — API style: REST
-ADR-005 — Containerisation: Docker Compose
-ADR-006 — Runtime: Node.js with Express
+ADR-001 — Architecture style: 3-tier
+ADR-002 — Stack: PostgreSQL + Node.js + React
+ADR-003 — API style: REST
+ADR-004 — Backend internal structure: Clean Architecture
+ADR-005 — Authentication: JWT-based stateless auth
 ...
 ```
 
