@@ -3,6 +3,7 @@ import { ProjectValidator } from '../../application/validators/project.validator
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
 import { ListProjectsUseCase } from '../../application/use-cases/list-projects.use-case';
 import { GetProjectDetailUseCase } from '../../application/use-cases/get-project-detail.use-case';
+import { DeleteProjectUseCase } from '../../application/use-cases/delete-project.use-case';
 import { PrismaProjectRepository } from '../repositories/prisma-project.repository';
 import { ResponseHandler } from '../http/response-handler';
 
@@ -11,6 +12,7 @@ export class ProjectController {
     private readonly createProjectUseCase: CreateProjectUseCase;
     private readonly listProjectsUseCase: ListProjectsUseCase;
     private readonly getProjectDetailUseCase: GetProjectDetailUseCase;
+    private readonly deleteProjectUseCase: DeleteProjectUseCase;
 
     constructor() {
         this.validator = new ProjectValidator();
@@ -18,6 +20,7 @@ export class ProjectController {
         this.createProjectUseCase = new CreateProjectUseCase(repository);
         this.listProjectsUseCase = new ListProjectsUseCase(repository);
         this.getProjectDetailUseCase = new GetProjectDetailUseCase(repository);
+        this.deleteProjectUseCase = new DeleteProjectUseCase(repository);
     }
 
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -44,6 +47,16 @@ export class ProjectController {
             const id = this.validator.validateId(req.params.id);
             const project = await this.getProjectDetailUseCase.execute(id);
             ResponseHandler.ok(res, project);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = this.validator.validateId(req.params.id);
+            await this.deleteProjectUseCase.execute(id);
+            ResponseHandler.noContent(res);
         } catch (error) {
             next(error);
         }

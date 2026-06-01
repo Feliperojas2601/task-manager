@@ -8,4 +8,8 @@ export class ResponseHandler {
     static created<T>(res: Response, data: T): void {
         res.status(201).json(data);
     }
+
+    static noContent(res: Response): void {
+        res.status(204).send();
+    }
 }

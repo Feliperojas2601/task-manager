@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../database/prisma', () => ({
-    prisma: { project: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() } },
+    prisma: { project: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), delete: jest.fn() } },
 }));
 
 import { PrismaProjectRepository } from './prisma-project.repository';
@@ -10,12 +10,14 @@ import { prisma } from '../database/prisma';
 const mockCreate = prisma.project.create as jest.MockedFunction<typeof prisma.project.create>;
 const mockFindMany = prisma.project.findMany as jest.MockedFunction<typeof prisma.project.findMany>;
 const mockFindUnique = prisma.project.findUnique as jest.MockedFunction<typeof prisma.project.findUnique>;
+const mockDelete = prisma.project.delete as jest.MockedFunction<typeof prisma.project.delete>;
 
 describe('PrismaProjectRepository', () => {
     beforeEach(() => {
         mockCreate.mockReset();
         mockFindMany.mockReset();
         mockFindUnique.mockReset();
+        mockDelete.mockReset();
     });
 
     it('calls prisma.project.create and returns the result', async () => {
@@ -129,5 +131,14 @@ describe('PrismaProjectRepository', () => {
         const result = await repository.findById('no-such-id');
 
         expect(result).toBeNull();
+    });
+
+    it('delete calls prisma.project.delete with the given id', async () => {
+        mockDelete.mockResolvedValue({} as never);
+        const repository = new PrismaProjectRepository();
+
+        await repository.delete('proj-1');
+
+        expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'proj-1' } });
     });
 });

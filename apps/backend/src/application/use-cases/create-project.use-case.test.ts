@@ -16,6 +16,7 @@ const makeRepository = (project?: Project): IProjectRepository => ({
     create: jest.fn<() => Promise<Project>>().mockResolvedValue(project ?? makeProject()),
     findAll: jest.fn<() => Promise<never[]>>().mockResolvedValue([]),
     findById: jest.fn<() => Promise<null>>().mockResolvedValue(null),
+    delete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
 });
 
 describe('CreateProjectUseCase', () => {

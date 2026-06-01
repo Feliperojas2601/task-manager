@@ -4,4 +4,5 @@ export interface IProjectRepository {
     create(data: { name: string; description: string | null }): Promise<Project>;
     findAll(): Promise<ProjectSummary[]>;
     findById(id: string): Promise<ProjectDetail | null>;
+    delete(id: string): Promise<void>;
 }

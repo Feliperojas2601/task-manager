@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { ResponseHandler } from './response-handler';
 
 const makeMockRes = () => {
-    const res = { status: jest.fn(), json: jest.fn() } as unknown as Response;
+    const res = { status: jest.fn(), json: jest.fn(), send: jest.fn() } as unknown as Response;
     (res.status as jest.Mock).mockReturnValue(res);
     return res;
 };
@@ -21,5 +21,12 @@ describe('ResponseHandler', () => {
         ResponseHandler.created(res, { id: '1', name: 'Project' });
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith({ id: '1', name: 'Project' });
+    });
+
+    it('noContent sends 204 with no body', () => {
+        const res = makeMockRes();
+        ResponseHandler.noContent(res);
+        expect(res.status).toHaveBeenCalledWith(204);
+        expect(res.send).toHaveBeenCalled();
     });
 });

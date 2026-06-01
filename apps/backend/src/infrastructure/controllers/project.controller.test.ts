@@ -5,12 +5,14 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 jest.mock('../../application/use-cases/create-project.use-case');
 jest.mock('../../application/use-cases/list-projects.use-case');
 jest.mock('../../application/use-cases/get-project-detail.use-case');
+jest.mock('../../application/use-cases/delete-project.use-case');
 jest.mock('../repositories/prisma-project.repository');
 
 import { ProjectController } from './project.controller';
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
 import { ListProjectsUseCase } from '../../application/use-cases/list-projects.use-case';
 import { GetProjectDetailUseCase } from '../../application/use-cases/get-project-detail.use-case';
+import { DeleteProjectUseCase } from '../../application/use-cases/delete-project.use-case';
 import { globalErrorHandler } from '../middleware/error-handler';
 import { Project, ProjectSummary, ProjectDetail } from '../../domain/entities/project.entity';
 import { NotFoundError } from '../../domain/errors/not-found.error';
@@ -18,6 +20,7 @@ import { NotFoundError } from '../../domain/errors/not-found.error';
 const MockCreateUseCase = jest.mocked(CreateProjectUseCase);
 const MockListUseCase = jest.mocked(ListProjectsUseCase);
 const MockGetDetailUseCase = jest.mocked(GetProjectDetailUseCase);
+const MockDeleteUseCase = jest.mocked(DeleteProjectUseCase);
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -56,6 +59,7 @@ const buildApp = () => {
     app.post('/projects', (req, res, next) => controller.create(req, res, next));
     app.get('/projects', (req, res, next) => controller.list(req, res, next));
     app.get('/projects/:id', (req, res, next) => controller.getById(req, res, next));
+    app.delete('/projects/:id', (req, res, next) => controller.remove(req, res, next));
     app.use(globalErrorHandler);
     return app;
 };
@@ -187,6 +191,52 @@ describe('GET /projects/:id', () => {
         const app = buildApp();
 
         const response = await request(app).get(`/projects/${VALID_UUID}`);
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
+    });
+});
+
+describe('DELETE /projects/:id', () => {
+    beforeEach(() => {
+        MockDeleteUseCase.mockClear();
+    });
+
+    it('returns 204 when project is deleted', async () => {
+        MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+        const app = buildApp();
+
+        const response = await request(app).delete(`/projects/${VALID_UUID}`);
+
+        expect(response.status).toBe(204);
+    });
+
+    it('returns 400 when id is not a valid UUID', async () => {
+        const app = buildApp();
+
+        const response = await request(app).delete('/projects/not-a-uuid');
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
+    });
+
+    it('returns 404 when project is not found', async () => {
+        MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(
+            new NotFoundError(`Project with id ${VALID_UUID} not found`),
+        );
+        const app = buildApp();
+
+        const response = await request(app).delete(`/projects/${VALID_UUID}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
+    });
+
+    it('returns 500 on unexpected use-case error', async () => {
+        MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(new Error('DB down'));
+        const app = buildApp();
+
+        const response = await request(app).delete(`/projects/${VALID_UUID}`);
 
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });

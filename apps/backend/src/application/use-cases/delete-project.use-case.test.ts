@@ -1,17 +1,16 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { GetProjectDetailUseCase } from './get-project-detail.use-case';
+import { DeleteProjectUseCase } from './delete-project.use-case';
 import { IProjectRepository } from '../repositories/project.repository';
 import { ProjectDetail } from '../../domain/entities/project.entity';
 import { NotFoundError } from '../../domain/errors/not-found.error';
 
-const makeDetail = (overrides?: Partial<ProjectDetail>): ProjectDetail => ({
+const makeDetail = (): ProjectDetail => ({
     id: 'proj-1',
     name: 'Test Project',
     description: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     tasks: [],
-    ...overrides,
 });
 
 const makeRepository = (detail: ProjectDetail | null): IProjectRepository => ({
@@ -21,23 +20,23 @@ const makeRepository = (detail: ProjectDetail | null): IProjectRepository => ({
     delete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
 });
 
-describe('GetProjectDetailUseCase', () => {
-    it('returns the project detail when found', async () => {
+describe('DeleteProjectUseCase', () => {
+    it('calls findById then delete when project exists', async () => {
         const detail = makeDetail();
         const repository = makeRepository(detail);
-        const useCase = new GetProjectDetailUseCase(repository);
+        const useCase = new DeleteProjectUseCase(repository);
 
-        const result = await useCase.execute('proj-1');
+        await useCase.execute('proj-1');
 
         expect(repository.findById).toHaveBeenCalledWith('proj-1');
-        expect(result).toEqual(detail);
+        expect(repository.delete).toHaveBeenCalledWith('proj-1');
     });
 
     it('throws NotFoundError when project does not exist', async () => {
         const repository = makeRepository(null);
-        const useCase = new GetProjectDetailUseCase(repository);
+        const useCase = new DeleteProjectUseCase(repository);
 
-        await expect(useCase.execute('missing-id')).rejects.toThrow(NotFoundError);
-        await expect(useCase.execute('missing-id')).rejects.toThrow('Project with id missing-id not found');
+        await expect(useCase.execute('missing')).rejects.toThrow(NotFoundError);
+        expect(repository.delete).not.toHaveBeenCalled();
     });
 });
