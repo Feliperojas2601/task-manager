@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
-import { globalErrorHandler } from './error-handler';
-import { HttpError } from '../../domain/errors/http.error';
-import { ValidationError } from '../../domain/errors/validation.error';
+import { globalErrorHandler } from '../../../src/infrastructure/middleware/error-handler';
+import { HttpError } from '../../../src/domain/errors/http.error';
+import { ValidationError } from '../../../src/domain/errors/validation.error';
 
 const makeMockRes = () => {
     const res = {

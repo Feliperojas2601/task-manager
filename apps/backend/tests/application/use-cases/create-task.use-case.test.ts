@@ -1,10 +1,10 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { CreateTaskUseCase } from './create-task.use-case';
-import { IProjectRepository } from '../repositories/project.repository';
-import { ITaskRepository } from '../repositories/task.repository';
-import { ProjectDetail } from '../../domain/entities/project.entity';
-import { Task } from '../../domain/entities/task.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { CreateTaskUseCase } from '../../../src/application/use-cases/create-task.use-case';
+import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { ITaskRepository } from '../../../src/application/repositories/task.repository';
+import { ProjectDetail } from '../../../src/domain/entities/project.entity';
+import { Task } from '../../../src/domain/entities/task.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 

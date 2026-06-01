@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { UpdateTaskUseCase } from './update-task.use-case';
-import { ITaskRepository } from '../repositories/task.repository';
-import { Task } from '../../domain/entities/task.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { UpdateTaskUseCase } from '../../../src/application/use-cases/update-task.use-case';
+import { ITaskRepository } from '../../../src/application/repositories/task.repository';
+import { Task } from '../../../src/domain/entities/task.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const makeTask = (overrides?: Partial<Task>): Task => ({
     id: 'task-1',

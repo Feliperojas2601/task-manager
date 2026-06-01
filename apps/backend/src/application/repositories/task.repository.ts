@@ -1,6 +1,6 @@
 import { Task } from '../../domain/entities/task.entity';
 import { TaskStatus, Priority } from '../../domain/entities/enums';
-import { TaskFilter } from '../../domain/value-objects/task-filter';
+import { TaskFilter } from '../../domain/entities/task.entity';
 
 export interface ITaskRepository {
     create(data: {

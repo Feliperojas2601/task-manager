@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-jest.mock('../database/prisma', () => ({
+jest.mock('../../../src/infrastructure/database/prisma', () => ({
     prisma: { task: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn(), findMany: jest.fn() } },
 }));
 
-import { PrismaTaskRepository } from './prisma-task.repository';
-import { prisma } from '../database/prisma';
+import { PrismaTaskRepository } from '../../../src/infrastructure/repositories/prisma-task.repository';
+import { prisma } from '../../../src/infrastructure/database/prisma';
 
 const mockCreate = prisma.task.create as jest.MockedFunction<typeof prisma.task.create>;
 const mockFindUnique = prisma.task.findUnique as jest.MockedFunction<typeof prisma.task.findUnique>;

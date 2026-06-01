@@ -10,3 +10,10 @@ export interface Task {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface TaskFilter {
+    status?: TaskStatus;
+    priority?: Priority;
+    sortBy?: 'createdAt' | 'priority';
+    order?: 'asc' | 'desc';
+}

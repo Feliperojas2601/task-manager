@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { DeleteProjectUseCase } from './delete-project.use-case';
-import { IProjectRepository } from '../repositories/project.repository';
-import { ProjectDetail } from '../../domain/entities/project.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { DeleteProjectUseCase } from '../../../src/application/use-cases/delete-project.use-case';
+import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { ProjectDetail } from '../../../src/domain/entities/project.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const makeDetail = (): ProjectDetail => ({
     id: 'proj-1',

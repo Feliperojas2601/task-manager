@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from '../app';
+import { app } from '../../../src/infrastructure/app';
 import { describe, it, expect } from '@jest/globals';
 
 describe('GET /health', () => {

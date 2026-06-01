@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { GetProjectDetailUseCase } from './get-project-detail.use-case';
-import { IProjectRepository } from '../repositories/project.repository';
-import { ProjectDetail } from '../../domain/entities/project.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { GetProjectDetailUseCase } from '../../../src/application/use-cases/get-project-detail.use-case';
+import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { ProjectDetail } from '../../../src/domain/entities/project.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const makeDetail = (overrides?: Partial<ProjectDetail>): ProjectDetail => ({
     id: 'proj-1',

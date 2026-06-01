@@ -2,7 +2,7 @@ import { prisma } from '../database/prisma';
 import { Task } from '../../domain/entities/task.entity';
 import { ITaskRepository } from '../../application/repositories/task.repository';
 import { TaskStatus, Priority } from '../../domain/entities/enums';
-import { TaskFilter } from '../../domain/value-objects/task-filter';
+import { TaskFilter } from '../../domain/entities/task.entity';
 
 export class PrismaTaskRepository implements ITaskRepository {
     async create(data: {

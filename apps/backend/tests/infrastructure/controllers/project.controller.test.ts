@@ -2,20 +2,20 @@ import request from 'supertest';
 import express from 'express';
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-jest.mock('../../application/use-cases/create-project.use-case');
-jest.mock('../../application/use-cases/list-projects.use-case');
-jest.mock('../../application/use-cases/get-project-detail.use-case');
-jest.mock('../../application/use-cases/delete-project.use-case');
-jest.mock('../repositories/prisma-project.repository');
+jest.mock('../../../src/application/use-cases/create-project.use-case');
+jest.mock('../../../src/application/use-cases/list-projects.use-case');
+jest.mock('../../../src/application/use-cases/get-project-detail.use-case');
+jest.mock('../../../src/application/use-cases/delete-project.use-case');
+jest.mock('../../../src/infrastructure/repositories/prisma-project.repository');
 
-import { ProjectController } from './project.controller';
-import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
-import { ListProjectsUseCase } from '../../application/use-cases/list-projects.use-case';
-import { GetProjectDetailUseCase } from '../../application/use-cases/get-project-detail.use-case';
-import { DeleteProjectUseCase } from '../../application/use-cases/delete-project.use-case';
-import { globalErrorHandler } from '../middleware/error-handler';
-import { Project, ProjectSummary, ProjectDetail } from '../../domain/entities/project.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { ProjectController } from '../../../src/infrastructure/controllers/project.controller';
+import { CreateProjectUseCase } from '../../../src/application/use-cases/create-project.use-case';
+import { ListProjectsUseCase } from '../../../src/application/use-cases/list-projects.use-case';
+import { GetProjectDetailUseCase } from '../../../src/application/use-cases/get-project-detail.use-case';
+import { DeleteProjectUseCase } from '../../../src/application/use-cases/delete-project.use-case';
+import { globalErrorHandler } from '../../../src/infrastructure/middleware/error-handler';
+import { Project, ProjectSummary, ProjectDetail } from '../../../src/domain/entities/project.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const MockCreateUseCase = jest.mocked(CreateProjectUseCase);
 const MockListUseCase = jest.mocked(ListProjectsUseCase);
@@ -65,9 +65,7 @@ const buildApp = () => {
 };
 
 describe('POST /projects', () => {
-    beforeEach(() => {
-        MockCreateUseCase.mockClear();
-    });
+    beforeEach(() => { MockCreateUseCase.mockClear(); });
 
     it('returns 201 with the created project', async () => {
         const project = makeProject();
@@ -82,46 +80,32 @@ describe('POST /projects', () => {
     });
 
     it('returns 400 with status and message when name is missing', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post('/projects').send({});
-
+        const response = await request(buildApp()).post('/projects').send({});
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'name is required' });
     });
 
     it('returns 400 with status and message when name is empty', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post('/projects').send({ name: '   ' });
-
+        const response = await request(buildApp()).post('/projects').send({ name: '   ' });
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'name is required' });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockCreateUseCase.prototype.execute = jest.fn<() => Promise<Project>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).post('/projects').send({ name: 'Test' });
-
+        const response = await request(buildApp()).post('/projects').send({ name: 'Test' });
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('GET /projects', () => {
-    beforeEach(() => {
-        MockListUseCase.mockClear();
-    });
+    beforeEach(() => { MockListUseCase.mockClear(); });
 
     it('returns 200 with list of projects', async () => {
         const projects = [makeSummary({ id: '1', taskCount: 2 }), makeSummary({ id: '2' })];
         MockListUseCase.prototype.execute = jest.fn<() => Promise<ProjectSummary[]>>().mockResolvedValue(projects);
-        const app = buildApp();
-
-        const response = await request(app).get('/projects');
-
+        const response = await request(buildApp()).get('/projects');
         expect(response.status).toBe(200);
         expect(response.body).toHaveLength(2);
         expect(response.body[0].taskCount).toBe(2);
@@ -129,47 +113,32 @@ describe('GET /projects', () => {
 
     it('returns 200 with empty array when no projects exist', async () => {
         MockListUseCase.prototype.execute = jest.fn<() => Promise<ProjectSummary[]>>().mockResolvedValue([]);
-        const app = buildApp();
-
-        const response = await request(app).get('/projects');
-
+        const response = await request(buildApp()).get('/projects');
         expect(response.status).toBe(200);
         expect(response.body).toEqual([]);
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockListUseCase.prototype.execute = jest.fn<() => Promise<ProjectSummary[]>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).get('/projects');
-
+        const response = await request(buildApp()).get('/projects');
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('GET /projects/:id', () => {
-    beforeEach(() => {
-        MockGetDetailUseCase.mockClear();
-    });
+    beforeEach(() => { MockGetDetailUseCase.mockClear(); });
 
     it('returns 200 with project detail when found', async () => {
-        const detail = makeDetail({ tasks: [] });
-        MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockResolvedValue(detail);
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}`);
-
+        MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockResolvedValue(makeDetail());
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(200);
         expect(response.body.id).toBe(VALID_UUID);
         expect(response.body.tasks).toEqual([]);
     });
 
     it('returns 400 when id is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get('/projects/not-a-uuid');
-
+        const response = await request(buildApp()).get('/projects/not-a-uuid');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
     });
@@ -178,44 +147,30 @@ describe('GET /projects/:id', () => {
         MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockRejectedValue(
             new NotFoundError(`Project with id ${VALID_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockGetDetailUseCase.prototype.execute = jest.fn<() => Promise<ProjectDetail>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('DELETE /projects/:id', () => {
-    beforeEach(() => {
-        MockDeleteUseCase.mockClear();
-    });
+    beforeEach(() => { MockDeleteUseCase.mockClear(); });
 
     it('returns 204 when project is deleted', async () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
-        const app = buildApp();
-
-        const response = await request(app).delete(`/projects/${VALID_UUID}`);
-
+        const response = await request(buildApp()).delete(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(204);
     });
 
     it('returns 400 when id is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).delete('/projects/not-a-uuid');
-
+        const response = await request(buildApp()).delete('/projects/not-a-uuid');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
     });
@@ -224,20 +179,14 @@ describe('DELETE /projects/:id', () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(
             new NotFoundError(`Project with id ${VALID_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).delete(`/projects/${VALID_UUID}`);
-
+        const response = await request(buildApp()).delete(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).delete(`/projects/${VALID_UUID}`);
-
+        const response = await request(buildApp()).delete(`/projects/${VALID_UUID}`);
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });

@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-jest.mock('../database/prisma', () => ({
+jest.mock('../../../src/infrastructure/database/prisma', () => ({
     prisma: { project: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), delete: jest.fn() } },
 }));
 
-import { PrismaProjectRepository } from './prisma-project.repository';
-import { prisma } from '../database/prisma';
+import { PrismaProjectRepository } from '../../../src/infrastructure/repositories/prisma-project.repository';
+import { prisma } from '../../../src/infrastructure/database/prisma';
 
 const mockCreate = prisma.project.create as jest.MockedFunction<typeof prisma.project.create>;
 const mockFindMany = prisma.project.findMany as jest.MockedFunction<typeof prisma.project.findMany>;
@@ -82,16 +82,7 @@ describe('PrismaProjectRepository', () => {
             createdAt: now,
             updatedAt: now,
             tasks: [
-                {
-                    id: 'task-1',
-                    title: 'Task A',
-                    description: null,
-                    status: 'PENDING',
-                    priority: 'MEDIUM',
-                    projectId: 'proj-1',
-                    createdAt: now,
-                    updatedAt: now,
-                },
+                { id: 'task-1', title: 'Task A', description: null, status: 'PENDING', priority: 'MEDIUM', projectId: 'proj-1', createdAt: now, updatedAt: now },
             ],
         };
         mockFindUnique.mockResolvedValue(raw as never);
@@ -99,10 +90,7 @@ describe('PrismaProjectRepository', () => {
 
         const result = await repository.findById('proj-1');
 
-        expect(mockFindUnique).toHaveBeenCalledWith({
-            where: { id: 'proj-1' },
-            include: { tasks: true },
-        });
+        expect(mockFindUnique).toHaveBeenCalledWith({ where: { id: 'proj-1' }, include: { tasks: true } });
         expect(result).toEqual({
             id: 'proj-1',
             name: 'My Project',
@@ -110,16 +98,7 @@ describe('PrismaProjectRepository', () => {
             createdAt: now,
             updatedAt: now,
             tasks: [
-                {
-                    id: 'task-1',
-                    title: 'Task A',
-                    description: null,
-                    status: 'PENDING',
-                    priority: 'MEDIUM',
-                    projectId: 'proj-1',
-                    createdAt: now,
-                    updatedAt: now,
-                },
+                { id: 'task-1', title: 'Task A', description: null, status: 'PENDING', priority: 'MEDIUM', projectId: 'proj-1', createdAt: now, updatedAt: now },
             ],
         });
     });

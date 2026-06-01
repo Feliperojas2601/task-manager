@@ -1,5 +1,5 @@
 import { TaskStatus, Priority } from '../../domain/entities/enums';
-import { TaskFilter } from '../../domain/value-objects/task-filter';
+import { TaskFilter } from '../../domain/entities/task.entity';
 import { ValidationError } from '../../domain/errors/validation.error';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -1,8 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { DeleteTaskUseCase } from './delete-task.use-case';
-import { ITaskRepository } from '../repositories/task.repository';
-import { Task } from '../../domain/entities/task.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { DeleteTaskUseCase } from '../../../src/application/use-cases/delete-task.use-case';
+import { ITaskRepository } from '../../../src/application/repositories/task.repository';
+import { Task } from '../../../src/domain/entities/task.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const makeTask = (): Task => ({
     id: 'task-1',

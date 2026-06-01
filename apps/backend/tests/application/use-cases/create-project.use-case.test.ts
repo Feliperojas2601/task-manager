@@ -1,7 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { CreateProjectUseCase } from './create-project.use-case';
-import { IProjectRepository } from '../repositories/project.repository';
-import { Project } from '../../domain/entities/project.entity';
+import { CreateProjectUseCase } from '../../../src/application/use-cases/create-project.use-case';
+import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { Project } from '../../../src/domain/entities/project.entity';
 
 const makeProject = (overrides?: Partial<Project>): Project => ({
     id: 'abc-123',

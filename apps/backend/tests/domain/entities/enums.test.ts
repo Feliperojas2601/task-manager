@@ -1,4 +1,4 @@
-import { TaskStatus, Priority } from './enums';
+import { TaskStatus, Priority } from '../../../src/domain/entities/enums';
 import { describe, it, expect } from '@jest/globals';
 
 describe('TaskStatus', () => {

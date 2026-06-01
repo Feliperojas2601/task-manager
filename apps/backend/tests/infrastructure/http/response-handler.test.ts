@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { Response } from 'express';
-import { ResponseHandler } from './response-handler';
+import { ResponseHandler } from '../../../src/infrastructure/http/response-handler';
 
 const makeMockRes = () => {
     const res = { status: jest.fn(), json: jest.fn(), send: jest.fn() } as unknown as Response;

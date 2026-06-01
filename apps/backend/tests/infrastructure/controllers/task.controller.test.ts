@@ -2,21 +2,21 @@ import request from 'supertest';
 import express from 'express';
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-jest.mock('../../application/use-cases/create-task.use-case');
-jest.mock('../../application/use-cases/update-task.use-case');
-jest.mock('../../application/use-cases/delete-task.use-case');
-jest.mock('../../application/use-cases/list-tasks.use-case');
-jest.mock('../repositories/prisma-project.repository');
-jest.mock('../repositories/prisma-task.repository');
+jest.mock('../../../src/application/use-cases/create-task.use-case');
+jest.mock('../../../src/application/use-cases/update-task.use-case');
+jest.mock('../../../src/application/use-cases/delete-task.use-case');
+jest.mock('../../../src/application/use-cases/list-tasks.use-case');
+jest.mock('../../../src/infrastructure/repositories/prisma-project.repository');
+jest.mock('../../../src/infrastructure/repositories/prisma-task.repository');
 
-import { TaskController } from './task.controller';
-import { CreateTaskUseCase } from '../../application/use-cases/create-task.use-case';
-import { UpdateTaskUseCase } from '../../application/use-cases/update-task.use-case';
-import { DeleteTaskUseCase } from '../../application/use-cases/delete-task.use-case';
-import { ListTasksUseCase } from '../../application/use-cases/list-tasks.use-case';
-import { globalErrorHandler } from '../middleware/error-handler';
-import { Task } from '../../domain/entities/task.entity';
-import { NotFoundError } from '../../domain/errors/not-found.error';
+import { TaskController } from '../../../src/infrastructure/controllers/task.controller';
+import { CreateTaskUseCase } from '../../../src/application/use-cases/create-task.use-case';
+import { UpdateTaskUseCase } from '../../../src/application/use-cases/update-task.use-case';
+import { DeleteTaskUseCase } from '../../../src/application/use-cases/delete-task.use-case';
+import { ListTasksUseCase } from '../../../src/application/use-cases/list-tasks.use-case';
+import { globalErrorHandler } from '../../../src/infrastructure/middleware/error-handler';
+import { Task } from '../../../src/domain/entities/task.entity';
+import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
 const MockCreateUseCase = jest.mocked(CreateTaskUseCase);
 const MockUpdateUseCase = jest.mocked(UpdateTaskUseCase);
@@ -51,16 +51,11 @@ const buildApp = () => {
 };
 
 describe('POST /projects/:projectId/tasks', () => {
-    beforeEach(() => {
-        MockCreateUseCase.mockClear();
-    });
+    beforeEach(() => { MockCreateUseCase.mockClear(); });
 
     it('returns 201 with the created task', async () => {
         MockCreateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockResolvedValue(makeTask());
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'My Task' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'My Task' });
         expect(response.status).toBe(201);
         expect(response.body.id).toBe(TASK_UUID);
         expect(response.body.status).toBe('PENDING');
@@ -68,46 +63,31 @@ describe('POST /projects/:projectId/tasks', () => {
     });
 
     it('returns 400 when projectId is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post('/projects/not-a-uuid/tasks').send({ title: 'Task' });
-
+        const response = await request(buildApp()).post('/projects/not-a-uuid/tasks').send({ title: 'Task' });
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'projectId must be a valid UUID' });
     });
 
     it('returns 400 when title is missing', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({});
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({});
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'title is required' });
     });
 
     it('returns 400 when title is empty', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: '   ' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: '   ' });
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'title is required' });
     });
 
     it('returns 400 when status is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task', status: 'INVALID' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task', status: 'INVALID' });
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('status must be one of');
     });
 
     it('returns 400 when priority is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task', priority: 'CRITICAL' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task', priority: 'CRITICAL' });
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('priority must be one of');
     });
@@ -116,83 +96,56 @@ describe('POST /projects/:projectId/tasks', () => {
         MockCreateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockRejectedValue(
             new NotFoundError(`Project with id ${VALID_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task' });
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockCreateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task' });
-
+        const response = await request(buildApp()).post(`/projects/${VALID_UUID}/tasks`).send({ title: 'Task' });
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('PATCH /tasks/:id', () => {
-    beforeEach(() => {
-        MockUpdateUseCase.mockClear();
-    });
+    beforeEach(() => { MockUpdateUseCase.mockClear(); });
 
     it('returns 200 with the updated task', async () => {
-        const updated = makeTask({ title: 'Updated', status: 'IN_PROGRESS' });
-        MockUpdateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockResolvedValue(updated);
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ title: 'Updated', status: 'IN_PROGRESS' });
-
+        MockUpdateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockResolvedValue(makeTask({ title: 'Updated', status: 'IN_PROGRESS' }));
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ title: 'Updated', status: 'IN_PROGRESS' });
         expect(response.status).toBe(200);
         expect(response.body.title).toBe('Updated');
         expect(response.body.status).toBe('IN_PROGRESS');
     });
 
     it('returns 400 when id is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).patch('/tasks/not-a-uuid').send({ title: 'X' });
-
+        const response = await request(buildApp()).patch('/tasks/not-a-uuid').send({ title: 'X' });
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
     });
 
     it('returns 400 when body is empty', async () => {
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({});
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({});
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'at least one field must be provided' });
     });
 
     it('returns 400 when title is empty string', async () => {
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ title: '   ' });
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ title: '   ' });
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'title must not be empty' });
     });
 
     it('returns 400 when status is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ status: 'INVALID' });
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ status: 'INVALID' });
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('status must be one of');
     });
 
     it('returns 400 when priority is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ priority: 'URGENT' });
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ priority: 'URGENT' });
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('priority must be one of');
     });
@@ -201,44 +154,30 @@ describe('PATCH /tasks/:id', () => {
         MockUpdateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockRejectedValue(
             new NotFoundError(`Task with id ${TASK_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ status: 'DONE' });
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ status: 'DONE' });
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Task with id ${TASK_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockUpdateUseCase.prototype.execute = jest.fn<() => Promise<Task>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).patch(`/tasks/${TASK_UUID}`).send({ status: 'DONE' });
-
+        const response = await request(buildApp()).patch(`/tasks/${TASK_UUID}`).send({ status: 'DONE' });
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('DELETE /tasks/:id', () => {
-    beforeEach(() => {
-        MockDeleteUseCase.mockClear();
-    });
+    beforeEach(() => { MockDeleteUseCase.mockClear(); });
 
     it('returns 204 when task is deleted', async () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
-        const app = buildApp();
-
-        const response = await request(app).delete(`/tasks/${TASK_UUID}`);
-
+        const response = await request(buildApp()).delete(`/tasks/${TASK_UUID}`);
         expect(response.status).toBe(204);
     });
 
     it('returns 400 when id is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).delete('/tasks/not-a-uuid');
-
+        const response = await request(buildApp()).delete('/tasks/not-a-uuid');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'id must be a valid UUID' });
     });
@@ -247,92 +186,62 @@ describe('DELETE /tasks/:id', () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(
             new NotFoundError(`Task with id ${TASK_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).delete(`/tasks/${TASK_UUID}`);
-
+        const response = await request(buildApp()).delete(`/tasks/${TASK_UUID}`);
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Task with id ${TASK_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockDeleteUseCase.prototype.execute = jest.fn<() => Promise<void>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).delete(`/tasks/${TASK_UUID}`);
-
+        const response = await request(buildApp()).delete(`/tasks/${TASK_UUID}`);
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });
 });
 
 describe('GET /projects/:projectId/tasks', () => {
-    beforeEach(() => {
-        MockListUseCase.mockClear();
-    });
+    beforeEach(() => { MockListUseCase.mockClear(); });
 
     it('returns 200 with tasks', async () => {
-        const tasks = [makeTask()];
-        MockListUseCase.prototype.execute = jest.fn<() => Promise<Task[]>>().mockResolvedValue(tasks);
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks`);
-
+        MockListUseCase.prototype.execute = jest.fn<() => Promise<Task[]>>().mockResolvedValue([makeTask()]);
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks`);
         expect(response.status).toBe(200);
         expect(response.body).toHaveLength(1);
     });
 
     it('returns 200 with empty array when no tasks match', async () => {
         MockListUseCase.prototype.execute = jest.fn<() => Promise<Task[]>>().mockResolvedValue([]);
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks`);
         expect(response.status).toBe(200);
         expect(response.body).toEqual([]);
     });
 
     it('returns 400 when projectId is not a valid UUID', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get('/projects/not-a-uuid/tasks');
-
+        const response = await request(buildApp()).get('/projects/not-a-uuid/tasks');
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'projectId must be a valid UUID' });
     });
 
     it('returns 400 when status query param is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks?status=INVALID`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks?status=INVALID`);
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('status must be one of');
     });
 
     it('returns 400 when priority query param is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks?priority=URGENT`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks?priority=URGENT`);
         expect(response.status).toBe(400);
         expect(response.body.message).toMatch('priority must be one of');
     });
 
     it('returns 400 when sortBy query param is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks?sortBy=invalid`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks?sortBy=invalid`);
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'sortBy must be one of createdAt, priority' });
     });
 
     it('returns 400 when order query param is invalid', async () => {
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks?order=sideways`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks?order=sideways`);
         expect(response.status).toBe(400);
         expect(response.body).toEqual({ status: 400, message: 'order must be one of asc, desc' });
     });
@@ -341,20 +250,14 @@ describe('GET /projects/:projectId/tasks', () => {
         MockListUseCase.prototype.execute = jest.fn<() => Promise<Task[]>>().mockRejectedValue(
             new NotFoundError(`Project with id ${VALID_UUID} not found`),
         );
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks`);
         expect(response.status).toBe(404);
         expect(response.body).toEqual({ status: 404, message: `Project with id ${VALID_UUID} not found` });
     });
 
     it('returns 500 on unexpected use-case error', async () => {
         MockListUseCase.prototype.execute = jest.fn<() => Promise<Task[]>>().mockRejectedValue(new Error('DB down'));
-        const app = buildApp();
-
-        const response = await request(app).get(`/projects/${VALID_UUID}/tasks`);
-
+        const response = await request(buildApp()).get(`/projects/${VALID_UUID}/tasks`);
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ status: 500, message: 'Internal server error' });
     });

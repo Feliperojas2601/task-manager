@@ -1,7 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { ListProjectsUseCase } from './list-projects.use-case';
-import { IProjectRepository } from '../repositories/project.repository';
-import { ProjectSummary } from '../../domain/entities/project.entity';
+import { ListProjectsUseCase } from '../../../src/application/use-cases/list-projects.use-case';
+import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { ProjectSummary } from '../../../src/domain/entities/project.entity';
 
 const makeSummary = (overrides?: Partial<ProjectSummary>): ProjectSummary => ({
     id: 'abc-123',

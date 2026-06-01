@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { ProjectValidator } from './project.validator';
+import { ProjectValidator } from '../../../src/application/validators/project.validator';
 
 describe('ProjectValidator', () => {
     const validator = new ProjectValidator();
