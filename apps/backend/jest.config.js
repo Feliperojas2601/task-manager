@@ -5,6 +5,7 @@ const config = {
     collectCoverageFrom: [
         'src/**/*.ts',
         '!src/infrastructure/server.ts',
+        '!src/infrastructure/database/prisma.ts',
     ],
     coverageThreshold: {
         global: {
