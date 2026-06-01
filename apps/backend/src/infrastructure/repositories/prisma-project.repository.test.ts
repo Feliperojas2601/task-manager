@@ -1,17 +1,19 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../database/prisma', () => ({
-    prisma: { project: { create: jest.fn() } },
+    prisma: { project: { create: jest.fn(), findMany: jest.fn() } },
 }));
 
 import { PrismaProjectRepository } from './prisma-project.repository';
 import { prisma } from '../database/prisma';
 
 const mockCreate = prisma.project.create as jest.MockedFunction<typeof prisma.project.create>;
+const mockFindMany = prisma.project.findMany as jest.MockedFunction<typeof prisma.project.findMany>;
 
 describe('PrismaProjectRepository', () => {
     beforeEach(() => {
         mockCreate.mockReset();
+        mockFindMany.mockReset();
     });
 
     it('calls prisma.project.create and returns the result', async () => {
@@ -35,5 +37,35 @@ describe('PrismaProjectRepository', () => {
         await repository.create({ name: 'T', description: 'A desc' });
 
         expect(mockCreate).toHaveBeenCalledWith({ data: { name: 'T', description: 'A desc' } });
+    });
+
+    it('findAll returns mapped summaries ordered by createdAt desc', async () => {
+        const now = new Date();
+        const raw = [
+            { id: '1', name: 'A', description: null, createdAt: now, updatedAt: now, _count: { tasks: 2 } },
+            { id: '2', name: 'B', description: 'desc', createdAt: now, updatedAt: now, _count: { tasks: 0 } },
+        ];
+        mockFindMany.mockResolvedValue(raw as never);
+        const repository = new PrismaProjectRepository();
+
+        const result = await repository.findAll();
+
+        expect(mockFindMany).toHaveBeenCalledWith({
+            orderBy: { createdAt: 'desc' },
+            include: { _count: { select: { tasks: true } } },
+        });
+        expect(result).toEqual([
+            { id: '1', name: 'A', description: null, taskCount: 2, createdAt: now, updatedAt: now },
+            { id: '2', name: 'B', description: 'desc', taskCount: 0, createdAt: now, updatedAt: now },
+        ]);
+    });
+
+    it('findAll returns empty array when no projects exist', async () => {
+        mockFindMany.mockResolvedValue([] as never);
+        const repository = new PrismaProjectRepository();
+
+        const result = await repository.findAll();
+
+        expect(result).toEqual([]);
     });
 });

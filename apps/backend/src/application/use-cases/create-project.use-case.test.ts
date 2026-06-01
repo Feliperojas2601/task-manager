@@ -14,6 +14,7 @@ const makeProject = (overrides?: Partial<Project>): Project => ({
 
 const makeRepository = (project?: Project): IProjectRepository => ({
     create: jest.fn<() => Promise<Project>>().mockResolvedValue(project ?? makeProject()),
+    findAll: jest.fn<() => Promise<never[]>>().mockResolvedValue([]),
 });
 
 describe('CreateProjectUseCase', () => {
