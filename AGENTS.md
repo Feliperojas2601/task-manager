@@ -23,6 +23,7 @@ docs/
 - **Imports:** external packages first, then internal modules; no barrel re-exports unless necessary
 - **Functions:** prefer named function declarations over arrow function assignments at module level
 - **No comments** unless the why is non-obvious
+- **Classes** use-cases, controllers, repositories should be classes and initialized in constructors.
 
 ## 3. Error Handling & Logging
 

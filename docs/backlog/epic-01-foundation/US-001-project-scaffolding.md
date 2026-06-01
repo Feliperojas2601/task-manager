@@ -10,7 +10,7 @@
 
 **Given** the repository has been cloned
 **When** I run `docker-compose up`
-**Then** the backend API is reachable at `http://localhost:3000/health`, the frontend is served at `http://localhost:5173`, and the PostgreSQL database is accessible
+**Then** the backend API is reachable at `http://localhost:3000/api/v1/health`, the frontend is served at `http://localhost:5173`, and the PostgreSQL database is accessible
 
 **Given** the monorepo structure exists
 **When** I navigate to `apps/backend` or `apps/frontend`
@@ -61,7 +61,7 @@ task-manager/
 
 **Response `200`**
 ```json
-{ "status": "ok" }
+{ "message": "ok" }
 ```
 
 ### Environment variables
