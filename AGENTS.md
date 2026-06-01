@@ -28,9 +28,21 @@ docs/
 ## 3. Error Handling & Logging
 
 - Domain errors live in `apps/backend/src/domain/errors/` (e.g., `NotFoundError`, `ValidationError`)
-- Controllers catch domain errors and map them to HTTP status codes
-- Unhandled errors return `500` with `{ "error": "Internal server error" }`
-- No `console.log` in production paths; use `console.error` for unexpected errors only
+- Controllers catch all errors, log them, and delegate to `next(error)`; `globalErrorHandler` handles the HTTP response
+- Unhandled errors return `500` with `{ status: 500, message: "Internal server error" }`
+- `console.log` and `console.error` are forbidden in production paths — use the logger exclusively
+
+**Logging conventions:**
+
+- **Interface:** `ILogger` in `src/application/logger/logger.interface.ts` — two methods only: `info` and `error`
+- **Factory:** `createLogger(layer)` in `src/infrastructure/logging/pino-logger.ts`; each file creates a module-level logger once: `const logger = createLogger('controller' | 'use-case' | 'repository' | 'http' | 'error-handler')`
+- **Correlation ID:** provided by the `correlation-id` package; `getId()` is called inside the logger on every invocation — no passing around required; `correlationIdMiddleware` binds a UUID per request via `AsyncLocalStorage`
+- **Message pattern:** `ClassName.methodName - start | end | error` — consistent across all layers
+- **Every method** in controllers, use cases, and repositories must log `start` at entry and `end` on success
+- **Every `catch` block** must call `logger.error('ClassName.methodName - error', { message: (error as Error).message })` before rethrowing or calling `next(error)`
+- **Error context:** always include `{ message }` at minimum; include `stack` only at the `error-handler` layer
+- **Use cases** receive `ILogger` via constructor injection (injected by the controller, which is the composition root)
+- **Repositories** import `createLogger` directly (they are already in infrastructure)
 
 ## 4. Testing Practices
 

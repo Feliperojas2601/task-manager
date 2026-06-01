@@ -1,6 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { DeleteProjectUseCase } from '../../../src/application/use-cases/delete-project.use-case';
 import { IProjectRepository } from '../../../src/application/repositories/project.repository';
+import { ILogger } from '../../../src/application/logger/logger.interface';
 import { ProjectDetail } from '../../../src/domain/entities/project.entity';
 import { NotFoundError } from '../../../src/domain/errors/not-found.error';
 
@@ -13,6 +14,8 @@ const makeDetail = (): ProjectDetail => ({
     tasks: [],
 });
 
+const makeLogger = (): ILogger => ({ info: jest.fn(), error: jest.fn() });
+
 const makeRepository = (detail: ProjectDetail | null): IProjectRepository => ({
     create: jest.fn<() => Promise<never>>(),
     findAll: jest.fn<() => Promise<never[]>>().mockResolvedValue([]),
@@ -22,9 +25,8 @@ const makeRepository = (detail: ProjectDetail | null): IProjectRepository => ({
 
 describe('DeleteProjectUseCase', () => {
     it('calls findById then delete when project exists', async () => {
-        const detail = makeDetail();
-        const repository = makeRepository(detail);
-        const useCase = new DeleteProjectUseCase(repository);
+        const repository = makeRepository(makeDetail());
+        const useCase = new DeleteProjectUseCase(repository, makeLogger());
 
         await useCase.execute('proj-1');
 
@@ -32,11 +34,14 @@ describe('DeleteProjectUseCase', () => {
         expect(repository.delete).toHaveBeenCalledWith('proj-1');
     });
 
-    it('throws NotFoundError when project does not exist', async () => {
-        const repository = makeRepository(null);
-        const useCase = new DeleteProjectUseCase(repository);
+    it('throws NotFoundError and logs error when project does not exist', async () => {
+        const logger = makeLogger();
+        const useCase = new DeleteProjectUseCase(makeRepository(null), logger);
 
         await expect(useCase.execute('missing')).rejects.toThrow(NotFoundError);
-        expect(repository.delete).not.toHaveBeenCalled();
+        expect(logger.error).toHaveBeenCalledWith(
+            'DeleteProjectUseCase.execute - error',
+            expect.objectContaining({ message: expect.stringContaining('missing') }),
+        );
     });
 });

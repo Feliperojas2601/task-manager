@@ -1,6 +1,11 @@
+import { describe, it, expect, jest } from '@jest/globals';
+
+jest.mock('../../../src/infrastructure/logging/pino-logger', () => ({
+    createLogger: jest.fn().mockReturnValue({ info: jest.fn(), error: jest.fn() }),
+}));
+
 import request from 'supertest';
 import { app } from '../../../src/infrastructure/app';
-import { describe, it, expect } from '@jest/globals';
 
 describe('GET /health', () => {
     it('returns 200 with status ok', async () => {

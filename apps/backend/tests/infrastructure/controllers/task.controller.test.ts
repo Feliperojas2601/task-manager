@@ -2,6 +2,9 @@ import request from 'supertest';
 import express from 'express';
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
+jest.mock('../../../src/infrastructure/logging/pino-logger', () => ({
+    createLogger: jest.fn().mockReturnValue({ info: jest.fn(), error: jest.fn() }),
+}));
 jest.mock('../../../src/application/use-cases/create-task.use-case');
 jest.mock('../../../src/application/use-cases/update-task.use-case');
 jest.mock('../../../src/application/use-cases/delete-task.use-case');
