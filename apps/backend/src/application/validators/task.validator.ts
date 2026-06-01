@@ -11,10 +11,24 @@ export interface CreateTaskInput {
     priority: Priority;
 }
 
+export interface UpdateTaskInput {
+    title?: string;
+    description?: string | null;
+    status?: TaskStatus;
+    priority?: Priority;
+}
+
 export class TaskValidator {
     validateProjectId(id: string): string {
         if (!UUID_REGEX.test(id)) {
             throw new ValidationError('projectId must be a valid UUID');
+        }
+        return id;
+    }
+
+    validateTaskId(id: string): string {
+        if (!UUID_REGEX.test(id)) {
+            throw new ValidationError('id must be a valid UUID');
         }
         return id;
     }
@@ -28,6 +42,34 @@ export class TaskValidator {
         const status = this.parseStatus(body.status);
         const priority = this.parsePriority(body.priority);
         return { projectId, title, description, status, priority };
+    }
+
+    validateUpdate(body: Record<string, unknown>): UpdateTaskInput {
+        const result: UpdateTaskInput = {};
+
+        if ('title' in body) {
+            const title = typeof body.title === 'string' ? body.title.trim() : '';
+            if (!title) throw new ValidationError('title must not be empty');
+            result.title = title;
+        }
+
+        if ('description' in body && (typeof body.description === 'string' || body.description === null)) {
+            result.description = body.description as string | null;
+        }
+
+        if ('status' in body) {
+            result.status = this.parseStatus(body.status);
+        }
+
+        if ('priority' in body) {
+            result.priority = this.parsePriority(body.priority);
+        }
+
+        if (Object.keys(result).length === 0) {
+            throw new ValidationError('at least one field must be provided');
+        }
+
+        return result;
     }
 
     private parseStatus(value: unknown): TaskStatus {

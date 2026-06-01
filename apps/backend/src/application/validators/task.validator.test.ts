@@ -19,6 +19,21 @@ describe('TaskValidator', () => {
         });
     });
 
+    describe('validateTaskId', () => {
+        it('returns the id when it is a valid UUID', () => {
+            const id = '550e8400-e29b-41d4-a716-446655440000';
+            expect(validator.validateTaskId(id)).toBe(id);
+        });
+
+        it('throws ValidationError when id is not a UUID', () => {
+            expect(() => validator.validateTaskId('not-a-uuid')).toThrow('id must be a valid UUID');
+        });
+
+        it('throws ValidationError when id is empty', () => {
+            expect(() => validator.validateTaskId('')).toThrow('id must be a valid UUID');
+        });
+    });
+
     describe('validateCreate', () => {
         const projectId = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -75,6 +90,54 @@ describe('TaskValidator', () => {
             expect(() => validator.validateCreate(projectId, { title: 'Task', priority: 'CRITICAL' })).toThrow(
                 'priority must be one of LOW, MEDIUM, HIGH',
             );
+        });
+    });
+
+    describe('validateUpdate', () => {
+        it('throws ValidationError when body is empty', () => {
+            expect(() => validator.validateUpdate({})).toThrow('at least one field must be provided');
+        });
+
+        it('returns title when provided and valid', () => {
+            const result = validator.validateUpdate({ title: '  Updated  ' });
+            expect(result).toEqual({ title: 'Updated' });
+        });
+
+        it('throws ValidationError when title is empty string', () => {
+            expect(() => validator.validateUpdate({ title: '   ' })).toThrow('title must not be empty');
+        });
+
+        it('returns description as string when provided', () => {
+            const result = validator.validateUpdate({ description: 'A description' });
+            expect(result).toEqual({ description: 'A description' });
+        });
+
+        it('returns description as null when explicitly set to null', () => {
+            const result = validator.validateUpdate({ description: null });
+            expect(result).toEqual({ description: null });
+        });
+
+        it('returns status when provided and valid', () => {
+            const result = validator.validateUpdate({ status: 'DONE' });
+            expect(result).toEqual({ status: 'DONE' });
+        });
+
+        it('throws ValidationError when status is invalid', () => {
+            expect(() => validator.validateUpdate({ status: 'INVALID' })).toThrow('status must be one of PENDING, IN_PROGRESS, DONE');
+        });
+
+        it('returns priority when provided and valid', () => {
+            const result = validator.validateUpdate({ priority: 'HIGH' });
+            expect(result).toEqual({ priority: 'HIGH' });
+        });
+
+        it('throws ValidationError when priority is invalid', () => {
+            expect(() => validator.validateUpdate({ priority: 'URGENT' })).toThrow('priority must be one of LOW, MEDIUM, HIGH');
+        });
+
+        it('returns multiple fields when all are valid', () => {
+            const result = validator.validateUpdate({ title: 'T', status: 'IN_PROGRESS', priority: 'LOW' });
+            expect(result).toEqual({ title: 'T', status: 'IN_PROGRESS', priority: 'LOW' });
         });
     });
 });

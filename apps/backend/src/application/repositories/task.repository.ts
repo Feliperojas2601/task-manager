@@ -9,4 +9,11 @@ export interface ITaskRepository {
         priority: Priority;
         projectId: string;
     }): Promise<Task>;
+    findById(id: string): Promise<Task | null>;
+    update(id: string, data: {
+        title?: string;
+        description?: string | null;
+        status?: TaskStatus;
+        priority?: Priority;
+    }): Promise<Task>;
 }

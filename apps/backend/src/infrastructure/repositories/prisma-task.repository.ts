@@ -21,4 +21,17 @@ export class PrismaTaskRepository implements ITaskRepository {
             },
         });
     }
+
+    async findById(id: string): Promise<Task | null> {
+        return prisma.task.findUnique({ where: { id } });
+    }
+
+    async update(id: string, data: {
+        title?: string;
+        description?: string | null;
+        status?: TaskStatus;
+        priority?: Priority;
+    }): Promise<Task> {
+        return prisma.task.update({ where: { id }, data });
+    }
 }
