@@ -86,3 +86,4 @@ task-manager/
 
 ### Notes 
 - Write a basic README.md with the project description and running command using docker. 
+- Write a basic AGENTS.md with conventions, error handling, testing, etc.
