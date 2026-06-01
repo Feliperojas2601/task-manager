@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 jest.mock('../database/prisma', () => ({
-    prisma: { task: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() } },
+    prisma: { task: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() } },
 }));
 
 import { PrismaTaskRepository } from './prisma-task.repository';
@@ -10,6 +10,7 @@ import { prisma } from '../database/prisma';
 const mockCreate = prisma.task.create as jest.MockedFunction<typeof prisma.task.create>;
 const mockFindUnique = prisma.task.findUnique as jest.MockedFunction<typeof prisma.task.findUnique>;
 const mockUpdate = prisma.task.update as jest.MockedFunction<typeof prisma.task.update>;
+const mockDelete = prisma.task.delete as jest.MockedFunction<typeof prisma.task.delete>;
 
 const makeRaw = (overrides = {}) => {
     const now = new Date();
@@ -31,6 +32,7 @@ describe('PrismaTaskRepository', () => {
         mockCreate.mockReset();
         mockFindUnique.mockReset();
         mockUpdate.mockReset();
+        mockDelete.mockReset();
     });
 
     it('calls prisma.task.create with correct data and returns the result', async () => {
@@ -90,5 +92,14 @@ describe('PrismaTaskRepository', () => {
 
         expect(mockUpdate).toHaveBeenCalledWith({ where: { id: 'task-1' }, data: { title: 'Updated', status: 'DONE' } });
         expect(result).toEqual(expected);
+    });
+
+    it('delete calls prisma.task.delete with the given id', async () => {
+        mockDelete.mockResolvedValue({} as never);
+        const repository = new PrismaTaskRepository();
+
+        await repository.delete('task-1');
+
+        expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'task-1' } });
     });
 });

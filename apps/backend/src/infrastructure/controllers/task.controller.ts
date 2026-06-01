@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { TaskValidator } from '../../application/validators/task.validator';
 import { CreateTaskUseCase } from '../../application/use-cases/create-task.use-case';
 import { UpdateTaskUseCase } from '../../application/use-cases/update-task.use-case';
+import { DeleteTaskUseCase } from '../../application/use-cases/delete-task.use-case';
 import { PrismaProjectRepository } from '../repositories/prisma-project.repository';
 import { PrismaTaskRepository } from '../repositories/prisma-task.repository';
 import { ResponseHandler } from '../http/response-handler';
@@ -10,6 +11,7 @@ export class TaskController {
     private readonly validator: TaskValidator;
     private readonly createTaskUseCase: CreateTaskUseCase;
     private readonly updateTaskUseCase: UpdateTaskUseCase;
+    private readonly deleteTaskUseCase: DeleteTaskUseCase;
 
     constructor() {
         this.validator = new TaskValidator();
@@ -17,6 +19,7 @@ export class TaskController {
         const taskRepository = new PrismaTaskRepository();
         this.createTaskUseCase = new CreateTaskUseCase(projectRepository, taskRepository);
         this.updateTaskUseCase = new UpdateTaskUseCase(taskRepository);
+        this.deleteTaskUseCase = new DeleteTaskUseCase(taskRepository);
     }
 
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -36,6 +39,16 @@ export class TaskController {
             const data = this.validator.validateUpdate(req.body);
             const task = await this.updateTaskUseCase.execute(id, data);
             ResponseHandler.ok(res, task);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = this.validator.validateTaskId(req.params.id);
+            await this.deleteTaskUseCase.execute(id);
+            ResponseHandler.noContent(res);
         } catch (error) {
             next(error);
         }

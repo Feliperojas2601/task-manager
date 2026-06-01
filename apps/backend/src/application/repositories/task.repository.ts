@@ -16,4 +16,5 @@ export interface ITaskRepository {
         status?: TaskStatus;
         priority?: Priority;
     }): Promise<Task>;
+    delete(id: string): Promise<void>;
 }
